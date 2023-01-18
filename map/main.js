@@ -6,17 +6,14 @@ import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
 import { get } from "ol/proj.js";
 
 $(document).ready(function () {
-  console.log("getParcels");
   $.ajax({
     type: "get",
     url: "https://localhost:7126/api/parcel/getparcels",
-    success: parselList,
+    success: parcelList,
   });
-  console.log("getParcels");
 });
 
-function parselList(data) {
-  console.log(data);
+function parcelList(data) {
   var html = "";
   for (var i = 0; i < data.length; i++) {
     html += "<tr>";
@@ -26,10 +23,13 @@ function parselList(data) {
     html += "<td>";
     html += "<ul style='list-style-type: none'>";
     html += "<li>";
-    html += "<button class='btn btn-warning'>";
+    html += "<button id='editParcel' class='btn btn-warning'>";
     html += "<i class='fa-solid fa-pen-to-square'> </i> Edit";
     html += "</button>";
-    html += "<button class='btn btn-danger'>";
+    html +=
+      "<button id='deleteParcel' value=" +
+      data[i].parcelId +
+      " class='btn btn-danger'>";
     html += "<i class='fa-solid fa-trash'> </i> Delete";
     html += "</button>";
     html += "</li>";
@@ -38,6 +38,20 @@ function parselList(data) {
     html += "</tr>";
   }
   $("tbody").html(html);
+}
+
+$(document).on("click", "#deleteParcel", function () {
+  deleteParcel($(this).val());
+});
+
+function deleteParcel(id) {
+  $.ajax({
+    type: "post",
+    url: "https://localhost:7126/api/parcel/delete?id=" + id,
+    success: function (data) {
+      alert(data);
+    },
+  });
 }
 
 const raster = new TileLayer({
