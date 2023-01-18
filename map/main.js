@@ -68,11 +68,13 @@ const vector = new VectorLayer({
     "fill-color": "rgba(255, 255, 255, 0.2)",
     "stroke-color": "#ffcc33",
     "stroke-width": 2,
+    "circle-radius": 7,
+    "circle-fill-color": "#ffcc33",
   },
 });
 
-//modal
-var modal = document.getElementById("myModal");
+//update modal
+var modal = document.getElementById("updateModal");
 var span = document.getElementsByClassName("close")[0];
 var updateBtn = document.getElementById("updateParcel");
 
@@ -89,8 +91,8 @@ window.onclick = function (event) {
   }
 };
 updateBtn.onclick = function (event) {
-  updateParcel($(this).val());
   event.preventDefault();
+  updateParcel($(this).val());
   modal.style.display = "none";
 };
 
@@ -117,6 +119,45 @@ function updateParcel(id) {
       $("#pcounty").val() +
       "&pD=" +
       $("#pdistrict").val(),
+  });
+}
+
+//add modal
+var addModal = document.getElementById("addModal");
+var addSpan = document.getElementsByClassName("close")[0];
+var addBtn = document.getElementById("addParcel");
+function add() {
+  addModal.style.display = "block";
+}
+addSpan.onclick = function () {
+  addModal.style.display = "none";
+};
+window.onclick = function (event) {
+  if (event.target == addModal) {
+    addModal.style.display = "none";
+  }
+};
+addBtn.onclick = function (event) {
+  event.preventDefault();
+  addParcel();
+  addModal.style.display = "none";
+};
+
+function addParcel() {
+  var Parcel = {
+    parcelCity: $("#addpcity").val(),
+    parcelCounty: $("#addpcounty").val(),
+    parcelDistrict: $("#addpdistrict").val(),
+  };
+  $.ajax({
+    type: "post",
+    url: "https://localhost:7126/api/parcel/add",
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify(Parcel),
+    success: function () {
+      addModal.style.display = "none";
+    },
+    datatype: "json",
   });
 }
 
@@ -149,6 +190,7 @@ function addInteractions() {
   map.addInteraction(draw);
   snap = new Snap({ source: source });
   map.addInteraction(snap);
+  draw.on("drawend", add);
 }
 
 /**

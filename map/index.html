@@ -52,7 +52,7 @@
       </thead>
       <tbody id="body"></tbody>
     </table>
-    <div id="myModal" class="modal">
+    <div id="updateModal" class="modal">
       <div class="modal-content">
         <span class="close">&times;</span>
         <form>
@@ -65,6 +65,25 @@
           <button id="updateParcel" value="" class="btn btn-success">
             Update
           </button>
+        </form>
+      </div>
+    </div>
+    <div id="addModal" class="modal">
+      <div class="modal-content">
+        <span class="addClose">&times;</span>
+        <form>
+          <label for="addpcity">Parcel City:</label><br />
+          <input type="text" id="addpcity" name="addpcity" val="" /><br />
+          <label for="addpcounty">Parcel County:</label><br />
+          <input type="text" id="addpcounty" name="addpcounty" val="" /><br />
+          <label for="addpdistrict">Parcel District:</label><br />
+          <input
+            type="text"
+            id="addpdistrict"
+            name="addpdistrict"
+            val=""
+          /><br />
+          <button id="addParcel" value="" class="btn btn-success">Add</button>
         </form>
       </div>
     </div>
