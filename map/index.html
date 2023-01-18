@@ -37,7 +37,6 @@
         <option value="LineString">LineString</option>
         <option value="Polygon">Polygon</option>
       </select>
-      <button id="myBtn" class="editbtn">Edit</button>
     </form>
     <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
     <script src="https://cdn.jsdelivr.net/npm/elm-pep@1.0.6/dist/elm-pep.js"></script>
@@ -53,5 +52,21 @@
       </thead>
       <tbody id="body"></tbody>
     </table>
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <form>
+          <label for="pcity">Parcel City:</label><br />
+          <input type="text" id="pcity" name="pcity" val="" /><br />
+          <label for="pcounty">Parcel County:</label><br />
+          <input type="text" id="pcounty" name="pcounty" val="" /><br />
+          <label for="pdistrict">Parcel District:</label><br />
+          <input type="text" id="pdistrict" name="pdistrict" val="" /><br />
+          <button id="updateParcel" value="" class="btn btn-success">
+            Update
+          </button>
+        </form>
+      </div>
+    </div>
   </body>
 </html>

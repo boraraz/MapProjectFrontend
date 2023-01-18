@@ -5,6 +5,7 @@ import { OSM, Vector as VectorSource } from "ol/source.js";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
 import { get } from "ol/proj.js";
 
+var allData;
 $(document).ready(function () {
   $.ajax({
     type: "get",
@@ -15,6 +16,7 @@ $(document).ready(function () {
 
 function parcelList(data) {
   var html = "";
+  allData = data;
   for (var i = 0; i < data.length; i++) {
     html += "<tr>";
     html += "<td>" + data[i].parcelCity + "</td>";
@@ -23,7 +25,10 @@ function parcelList(data) {
     html += "<td>";
     html += "<ul style='list-style-type: none'>";
     html += "<li>";
-    html += "<button id='editParcel' class='btn btn-warning'>";
+    html +=
+      "<button id='editParcel' value=" +
+      data[i].parcelId +
+      " class='btn btn-warning'>";
     html += "<i class='fa-solid fa-pen-to-square'> </i> Edit";
     html += "</button>";
     html +=
@@ -40,17 +45,15 @@ function parcelList(data) {
   $("tbody").html(html);
 }
 
-$(document).on("click", "#deleteParcel", function () {
+$(document).on("click", "#deleteParcel", function (event) {
   deleteParcel($(this).val());
+  event.preventDefault();
 });
 
 function deleteParcel(id) {
   $.ajax({
     type: "post",
     url: "https://localhost:7126/api/parcel/delete?id=" + id,
-    success: function (data) {
-      alert(data);
-    },
   });
 }
 
@@ -67,6 +70,55 @@ const vector = new VectorLayer({
     "stroke-width": 2,
   },
 });
+
+//modal
+var modal = document.getElementById("myModal");
+var span = document.getElementsByClassName("close")[0];
+var updateBtn = document.getElementById("updateParcel");
+
+$(document).on("click", "#editParcel", function () {
+  modal.style.display = "block";
+  listParcelById($(this).val());
+});
+span.onclick = function () {
+  modal.style.display = "none";
+};
+window.onclick = function (event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+};
+updateBtn.onclick = function (event) {
+  updateParcel($(this).val());
+  event.preventDefault();
+  modal.style.display = "none";
+};
+
+function listParcelById(id) {
+  for (var i = 0; i < allData.length; i++) {
+    if (allData[i].parcelId == id) {
+      $("#pcity").val(allData[i].parcelCity);
+      $("#pcounty").val(allData[i].parcelCounty);
+      $("#pdistrict").val(allData[i].parcelDistrict);
+      $("#updateParcel").val(allData[i].parcelId);
+    }
+  }
+}
+
+function updateParcel(id) {
+  $.ajax({
+    type: "post",
+    url:
+      "https://localhost:7126/api/parcel/update?id=" +
+      id +
+      "&pC=" +
+      $("#pcity").val() +
+      "&pCo=" +
+      $("#pcounty").val() +
+      "&pD=" +
+      $("#pdistrict").val(),
+  });
+}
 
 // Limit multi-world panning to one world east and west of the real world.
 // Geometry coordinates have to be within that range.
