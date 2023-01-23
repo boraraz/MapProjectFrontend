@@ -7,12 +7,20 @@ import { get } from "ol/proj.js";
 
 var allData;
 $(document).ready(function () {
+  $.ajaxSetup({
+    cache: false,
+  });
+  getAll();
+});
+
+function getAll() {
+  console.log("getAll");
   $.ajax({
     type: "get",
     url: "https://localhost:7126/api/parcel/getparcels",
     success: parcelList,
   });
-});
+}
 
 function parcelList(data) {
   var html = "";
@@ -85,15 +93,18 @@ $(document).on("click", "#editParcel", function () {
 span.onclick = function () {
   modal.style.display = "none";
 };
-window.onclick = function (event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
-};
 updateBtn.onclick = function (event) {
   event.preventDefault();
   updateParcel($(this).val());
   modal.style.display = "none";
+};
+
+window.onclick = function (event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  } else if (event.target == addModal) {
+    addModal.style.display = "none";
+  }
 };
 
 function listParcelById(id) {
@@ -124,18 +135,13 @@ function updateParcel(id) {
 
 //add modal
 var addModal = document.getElementById("addModal");
-var addSpan = document.getElementsByClassName("close")[0];
+var addSpan = document.getElementsByClassName("addClose")[0];
 var addBtn = document.getElementById("addParcel");
 function add() {
   addModal.style.display = "block";
 }
 addSpan.onclick = function () {
   addModal.style.display = "none";
-};
-window.onclick = function (event) {
-  if (event.target == addModal) {
-    addModal.style.display = "none";
-  }
 };
 addBtn.onclick = function (event) {
   event.preventDefault();
