@@ -25,30 +25,36 @@ function getAll() {
 function parcelList(data) {
   var html = "";
   allData = data;
-  for (var i = 0; i < data.length; i++) {
+  if (data.length == 0) {
     html += "<tr>";
-    html += "<td>" + data[i].parcelCity + "</td>";
-    html += "<td>" + data[i].parcelCounty + "</td>";
-    html += "<td>" + data[i].parcelDistrict + "</td>";
-    html += "<td>";
-    html += "<ul style='list-style-type: none'>";
-    html += "<li>";
-    html +=
-      "<button id='editParcel' value=" +
-      data[i].parcelId +
-      " class='btn btn-warning'>";
-    html += "<i class='fa-solid fa-pen-to-square'> </i> Edit";
-    html += "</button>";
-    html +=
-      "<button id='deleteParcel' value=" +
-      data[i].parcelId +
-      " class='btn btn-danger'>";
-    html += "<i class='fa-solid fa-trash'> </i> Delete";
-    html += "</button>";
-    html += "</li>";
-    html += "</ul>";
-    html += "</td>";
+    html += "<td colspan='4'>No record found</td>";
     html += "</tr>";
+  } else {
+    for (var i = 0; i < data.length; i++) {
+      html += "<tr>";
+      html += "<td>" + data[i].parcelCity + "</td>";
+      html += "<td>" + data[i].parcelCounty + "</td>";
+      html += "<td>" + data[i].parcelDistrict + "</td>";
+      html += "<td>";
+      html += "<ul style='list-style-type: none'>";
+      html += "<li>";
+      html +=
+        "<button id='editParcel' value=" +
+        data[i].parcelId +
+        " class='btn btn-warning'>";
+      html += "<i class='fa-solid fa-pen-to-square'> </i> Edit";
+      html += "</button>";
+      html +=
+        "<button id='deleteParcel' value=" +
+        data[i].parcelId +
+        " class='btn btn-danger'>";
+      html += "<i class='fa-solid fa-trash'> </i> Delete";
+      html += "</button>";
+      html += "</li>";
+      html += "</ul>";
+      html += "</td>";
+      html += "</tr>";
+    }
   }
   $("tbody").html(html);
 }
