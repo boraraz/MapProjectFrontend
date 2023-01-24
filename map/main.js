@@ -14,7 +14,6 @@ $(document).ready(function () {
 });
 
 function getAll() {
-  console.log("getAll");
   $.ajax({
     type: "get",
     url: "https://localhost:7126/api/parcel/getparcels",
