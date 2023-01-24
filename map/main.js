@@ -56,6 +56,7 @@ function parcelList(data) {
       html += "</tr>";
     }
   }
+  $("tbody").empty();
   $("tbody").html(html);
 }
 
@@ -65,9 +66,16 @@ $(document).on("click", "#deleteParcel", function (event) {
 });
 
 function deleteParcel(id) {
-  $.ajax({
-    type: "post",
-    url: "https://localhost:7126/api/parcel/delete?id=" + id,
+  let deletePromise = new Promise(function (resolve) {
+    $.ajax({
+      type: "post",
+      url: "https://localhost:7126/api/parcel/delete?id=" + id,
+    });
+
+    setTimeout(() => resolve("Success"), 100);
+  });
+  deletePromise.then(function () {
+    getAll();
   });
 }
 
@@ -125,17 +133,23 @@ function listParcelById(id) {
 }
 
 function updateParcel(id) {
-  $.ajax({
-    type: "post",
-    url:
-      "https://localhost:7126/api/parcel/update?id=" +
-      id +
-      "&pC=" +
-      $("#pcity").val() +
-      "&pCo=" +
-      $("#pcounty").val() +
-      "&pD=" +
-      $("#pdistrict").val(),
+  let updatePromise = new Promise(function (resolve) {
+    $.ajax({
+      type: "post",
+      url:
+        "https://localhost:7126/api/parcel/update?id=" +
+        id +
+        "&pC=" +
+        $("#pcity").val() +
+        "&pCo=" +
+        $("#pcounty").val() +
+        "&pD=" +
+        $("#pdistrict").val(),
+    });
+    setTimeout(() => resolve("Success"), 100);
+  });
+  updatePromise.then(function () {
+    getAll();
   });
 }
 
@@ -156,20 +170,29 @@ addBtn.onclick = function (event) {
 };
 
 function addParcel() {
-  var Parcel = {
-    parcelCity: $("#addpcity").val(),
-    parcelCounty: $("#addpcounty").val(),
-    parcelDistrict: $("#addpdistrict").val(),
-  };
-  $.ajax({
-    type: "post",
-    url: "https://localhost:7126/api/parcel/add",
-    contentType: "application/json; charset=utf-8",
-    data: JSON.stringify(Parcel),
-    success: function () {
-      addModal.style.display = "none";
-    },
-    datatype: "json",
+  let addPromise = new Promise(function (resolve) {
+    var Parcel = {
+      parcelCity: $("#addpcity").val(),
+      parcelCounty: $("#addpcounty").val(),
+      parcelDistrict: $("#addpdistrict").val(),
+    };
+    $.ajax({
+      type: "post",
+      url: "https://localhost:7126/api/parcel/add",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify(Parcel),
+      success: function () {
+        addModal.style.display = "none";
+      },
+      datatype: "json",
+    });
+    $("#addpcity").val("");
+    $("#addpcounty").val("");
+    $("#addpdistrict").val("");
+    setTimeout(() => resolve("Success"), 100);
+  });
+  addPromise.then(function () {
+    getAll();
   });
 }
 
