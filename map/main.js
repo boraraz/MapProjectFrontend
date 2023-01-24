@@ -13,12 +13,86 @@ $(document).ready(function () {
   getAll();
 });
 
+//Functions
 function getAll() {
   $.ajax({
     type: "get",
     url: "https://localhost:7126/api/parcel/getparcels",
     success: parcelList,
   });
+}
+
+function deleteParcel(id) {
+  let deletePromise = new Promise(function (resolve) {
+    $.ajax({
+      type: "post",
+      url: "https://localhost:7126/api/parcel/delete?id=" + id,
+    });
+
+    setTimeout(() => resolve("Success"), 100);
+  });
+  deletePromise.then(function () {
+    getAll();
+  });
+}
+
+function updateParcel(id) {
+  let updatePromise = new Promise(function (resolve) {
+    $.ajax({
+      type: "post",
+      url:
+        "https://localhost:7126/api/parcel/update?id=" +
+        id +
+        "&pC=" +
+        $("#pcity").val() +
+        "&pCo=" +
+        $("#pcounty").val() +
+        "&pD=" +
+        $("#pdistrict").val(),
+    });
+    setTimeout(() => resolve("Success"), 100);
+  });
+  updatePromise.then(function () {
+    getAll();
+  });
+}
+
+function addParcel() {
+  let addPromise = new Promise(function (resolve) {
+    var Parcel = {
+      parcelCity: $("#addpcity").val(),
+      parcelCounty: $("#addpcounty").val(),
+      parcelDistrict: $("#addpdistrict").val(),
+    };
+    $.ajax({
+      type: "post",
+      url: "https://localhost:7126/api/parcel/add",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify(Parcel),
+      success: function () {
+        addModal.style.display = "none";
+      },
+      datatype: "json",
+    });
+    $("#addpcity").val("");
+    $("#addpcounty").val("");
+    $("#addpdistrict").val("");
+    setTimeout(() => resolve("Success"), 100);
+  });
+  addPromise.then(function () {
+    getAll();
+  });
+}
+
+function listParcelById(id) {
+  for (var i = 0; i < allData.length; i++) {
+    if (allData[i].parcelId == id) {
+      $("#pcity").val(allData[i].parcelCity);
+      $("#pcounty").val(allData[i].parcelCounty);
+      $("#pdistrict").val(allData[i].parcelDistrict);
+      $("#updateParcel").val(allData[i].parcelId);
+    }
+  }
 }
 
 function parcelList(data) {
@@ -59,39 +133,14 @@ function parcelList(data) {
   $("tbody").html(html);
 }
 
+//buttons
 $(document).on("click", "#deleteParcel", function (event) {
   deleteParcel($(this).val());
   event.preventDefault();
 });
-
-function deleteParcel(id) {
-  let deletePromise = new Promise(function (resolve) {
-    $.ajax({
-      type: "post",
-      url: "https://localhost:7126/api/parcel/delete?id=" + id,
-    });
-
-    setTimeout(() => resolve("Success"), 100);
-  });
-  deletePromise.then(function () {
-    getAll();
-  });
-}
-
-const raster = new TileLayer({
-  source: new OSM(),
-});
-
-const source = new VectorSource();
-const vector = new VectorLayer({
-  source: source,
-  style: {
-    "fill-color": "rgba(255, 255, 255, 0.2)",
-    "stroke-color": "#ffcc33",
-    "stroke-width": 2,
-    "circle-radius": 7,
-    "circle-fill-color": "#ffcc33",
-  },
+$(document).on("click", "#editParcel", function () {
+  modal.style.display = "block";
+  listParcelById($(this).val());
 });
 
 //update modal
@@ -99,10 +148,6 @@ var modal = document.getElementById("updateModal");
 var span = document.getElementsByClassName("close")[0];
 var updateBtn = document.getElementById("updateParcel");
 
-$(document).on("click", "#editParcel", function () {
-  modal.style.display = "block";
-  listParcelById($(this).val());
-});
 span.onclick = function () {
   modal.style.display = "none";
 };
@@ -120,38 +165,6 @@ window.onclick = function (event) {
   }
 };
 
-function listParcelById(id) {
-  for (var i = 0; i < allData.length; i++) {
-    if (allData[i].parcelId == id) {
-      $("#pcity").val(allData[i].parcelCity);
-      $("#pcounty").val(allData[i].parcelCounty);
-      $("#pdistrict").val(allData[i].parcelDistrict);
-      $("#updateParcel").val(allData[i].parcelId);
-    }
-  }
-}
-
-function updateParcel(id) {
-  let updatePromise = new Promise(function (resolve) {
-    $.ajax({
-      type: "post",
-      url:
-        "https://localhost:7126/api/parcel/update?id=" +
-        id +
-        "&pC=" +
-        $("#pcity").val() +
-        "&pCo=" +
-        $("#pcounty").val() +
-        "&pD=" +
-        $("#pdistrict").val(),
-    });
-    setTimeout(() => resolve("Success"), 100);
-  });
-  updatePromise.then(function () {
-    getAll();
-  });
-}
-
 //add modal
 var addModal = document.getElementById("addModal");
 var addSpan = document.getElementsByClassName("addClose")[0];
@@ -168,32 +181,21 @@ addBtn.onclick = function (event) {
   addModal.style.display = "none";
 };
 
-function addParcel() {
-  let addPromise = new Promise(function (resolve) {
-    var Parcel = {
-      parcelCity: $("#addpcity").val(),
-      parcelCounty: $("#addpcounty").val(),
-      parcelDistrict: $("#addpdistrict").val(),
-    };
-    $.ajax({
-      type: "post",
-      url: "https://localhost:7126/api/parcel/add",
-      contentType: "application/json; charset=utf-8",
-      data: JSON.stringify(Parcel),
-      success: function () {
-        addModal.style.display = "none";
-      },
-      datatype: "json",
-    });
-    $("#addpcity").val("");
-    $("#addpcounty").val("");
-    $("#addpdistrict").val("");
-    setTimeout(() => resolve("Success"), 100);
-  });
-  addPromise.then(function () {
-    getAll();
-  });
-}
+const raster = new TileLayer({
+  source: new OSM(),
+});
+
+const source = new VectorSource();
+const vector = new VectorLayer({
+  source: source,
+  style: {
+    "fill-color": "rgba(255, 255, 255, 0.2)",
+    "stroke-color": "#ffcc33",
+    "stroke-width": 2,
+    "circle-radius": 7,
+    "circle-fill-color": "#ffcc33",
+  },
+});
 
 // Limit multi-world panning to one world east and west of the real world.
 // Geometry coordinates have to be within that range.
@@ -224,7 +226,10 @@ function addInteractions() {
   map.addInteraction(draw);
   snap = new Snap({ source: source });
   map.addInteraction(snap);
-  draw.on("drawend", add);
+  draw.on("drawend", function (e) {
+    console.log(e.feature.getGeometry().getCoordinates());
+    add();
+  });
 }
 
 /**
