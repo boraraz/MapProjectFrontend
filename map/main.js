@@ -1,11 +1,79 @@
 import Map from "ol/Map.js";
 import View from "ol/View.js";
+import Feature from "ol/Feature.js";
 import { Draw, Modify, Snap } from "ol/interaction.js";
 import { OSM, Vector as VectorSource } from "ol/source.js";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
 import { get } from "ol/proj.js";
+import format from "ol/format/WKT";
 
 var allData;
+var outgoingWkt;
+var incomingWkt;
+
+const frmt = new format();
+const raster = new TileLayer({
+  source: new OSM(),
+});
+
+const source = new VectorSource();
+const vector = new VectorLayer({
+  source: source,
+  style: {
+    "fill-color": "rgba(255, 255, 255, 0.2)",
+    "stroke-color": "#ffcc33",
+    "stroke-width": 2,
+    "circle-radius": 7,
+    "circle-fill-color": "#ffcc33",
+  },
+  feature: new Feature({}),
+});
+
+// Limit multi-world panning to one world east and west of the real world.
+// Geometry coordinates have to be within that range.
+const extent = get("EPSG:3857").getExtent().slice();
+extent[0] += extent[0];
+extent[2] += extent[2];
+const map = new Map({
+  layers: [raster, vector],
+  target: "map",
+  view: new View({
+    center: [-11000000, 4600000],
+    zoom: 4,
+    extent,
+  }),
+});
+
+let draw, snap; // global so we can remove them later
+const typeSelect = document.getElementById("type");
+
+const modify = new Modify({ source: source });
+map.addInteraction(modify);
+function addInteractions() {
+  draw = new Draw({
+    source: source,
+    type: typeSelect.value,
+  });
+  map.addInteraction(draw);
+  snap = new Snap({ source: source });
+  map.addInteraction(snap);
+  draw.on("drawend", function (e) {
+    outgoingWkt = frmt.writeFeature(e.feature);
+    add();
+  });
+}
+
+/**
+ * Handle change event.
+ */
+typeSelect.onchange = function () {
+  map.removeInteraction(draw);
+  map.removeInteraction(snap);
+  addInteractions();
+};
+
+addInteractions();
+
 $(document).ready(function () {
   $.ajaxSetup({
     cache: false,
@@ -23,65 +91,54 @@ function getAll() {
 }
 
 function deleteParcel(id) {
-  let deletePromise = new Promise(function (resolve) {
-    $.ajax({
-      type: "post",
-      url: "https://localhost:7126/api/parcel/delete?id=" + id,
-    });
-
-    setTimeout(() => resolve("Success"), 100);
-  });
-  deletePromise.then(function () {
-    getAll();
+  $.ajax({
+    type: "post",
+    url: "https://localhost:7126/api/parcel/delete?id=" + id,
+    success: function () {
+      getAll();
+    },
   });
 }
 
 function updateParcel(id) {
-  let updatePromise = new Promise(function (resolve) {
-    $.ajax({
-      type: "post",
-      url:
-        "https://localhost:7126/api/parcel/update?id=" +
-        id +
-        "&pC=" +
-        $("#pcity").val() +
-        "&pCo=" +
-        $("#pcounty").val() +
-        "&pD=" +
-        $("#pdistrict").val(),
-    });
-    setTimeout(() => resolve("Success"), 100);
-  });
-  updatePromise.then(function () {
-    getAll();
+  $.ajax({
+    type: "post",
+    url:
+      "https://localhost:7126/api/parcel/update?id=" +
+      id +
+      "&pC=" +
+      $("#pcity").val() +
+      "&pCo=" +
+      $("#pcounty").val() +
+      "&pD=" +
+      $("#pdistrict").val(),
+    success: function () {
+      getAll();
+    },
   });
 }
 
 function addParcel() {
-  let addPromise = new Promise(function (resolve) {
-    var Parcel = {
-      parcelCity: $("#addpcity").val(),
-      parcelCounty: $("#addpcounty").val(),
-      parcelDistrict: $("#addpdistrict").val(),
-    };
-    $.ajax({
-      type: "post",
-      url: "https://localhost:7126/api/parcel/add",
-      contentType: "application/json; charset=utf-8",
-      data: JSON.stringify(Parcel),
-      success: function () {
-        addModal.style.display = "none";
-      },
-      datatype: "json",
-    });
-    $("#addpcity").val("");
-    $("#addpcounty").val("");
-    $("#addpdistrict").val("");
-    setTimeout(() => resolve("Success"), 100);
+  var Parcel = {
+    parcelCity: $("#addpcity").val(),
+    parcelCounty: $("#addpcounty").val(),
+    parcelDistrict: $("#addpdistrict").val(),
+    parcelCoordinates: outgoingWkt,
+  };
+  $.ajax({
+    type: "post",
+    url: "https://localhost:7126/api/parcel/add",
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify(Parcel),
+    success: function () {
+      addModal.style.display = "none";
+      getAll();
+    },
+    datatype: "json",
   });
-  addPromise.then(function () {
-    getAll();
-  });
+  $("#addpcity").val("");
+  $("#addpcounty").val("");
+  $("#addpdistrict").val("");
 }
 
 function listParcelById(id) {
@@ -129,6 +186,13 @@ function parcelList(data) {
       html += "</tr>";
     }
   }
+  const a = data[0].parcelCoordinates;
+  const f = frmt.readFeature(a, {
+    dataProjection: "EPSG:4326",
+    featureProjection: "EPSG:3857",
+  });
+  source.addFeature(f);
+  map.addInteraction(snap);
   $("tbody").empty();
   $("tbody").html(html);
 }
@@ -181,64 +245,10 @@ addBtn.onclick = function (event) {
   addModal.style.display = "none";
 };
 
-const raster = new TileLayer({
-  source: new OSM(),
-});
-
-const source = new VectorSource();
-const vector = new VectorLayer({
-  source: source,
-  style: {
-    "fill-color": "rgba(255, 255, 255, 0.2)",
-    "stroke-color": "#ffcc33",
-    "stroke-width": 2,
-    "circle-radius": 7,
-    "circle-fill-color": "#ffcc33",
-  },
-});
-
-// Limit multi-world panning to one world east and west of the real world.
-// Geometry coordinates have to be within that range.
-const extent = get("EPSG:3857").getExtent().slice();
-extent[0] += extent[0];
-extent[2] += extent[2];
-const map = new Map({
-  layers: [raster, vector],
-  target: "map",
-  view: new View({
-    center: [-11000000, 4600000],
-    zoom: 4,
-    extent,
-  }),
-});
-
-const modify = new Modify({ source: source });
-map.addInteraction(modify);
-
-let draw, snap; // global so we can remove them later
-const typeSelect = document.getElementById("type");
-
-function addInteractions() {
-  draw = new Draw({
-    source: source,
-    type: typeSelect.value,
-  });
-  map.addInteraction(draw);
-  snap = new Snap({ source: source });
-  map.addInteraction(snap);
-  draw.on("drawend", function (e) {
-    console.log(e.feature.getGeometry().getCoordinates());
-    add();
-  });
-}
-
-/**
- * Handle change event.
- */
-typeSelect.onchange = function () {
-  map.removeInteraction(draw);
-  map.removeInteraction(snap);
-  addInteractions();
-};
-
-addInteractions();
+// incomingWkt =
+//   "POLYGON((-12245082.753737235 5672182.195756167,-12195169.374267016 4660270.596802861,-11187843.99701082 4746032.942538829,-11102081.651274852 5508186.551570321,-11919308.139185814 5638970.306966258,-12245082.753737235 5672182.195756167))";
+// console.log(incomingWkt);
+// featureWKT = frmt.readFeature(incomingWkt, {
+//   dataProjection: "EPSG:4326",
+//   featureProjection: "EPSG:3857",
+// });
