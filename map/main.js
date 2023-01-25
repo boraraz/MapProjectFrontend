@@ -212,13 +212,13 @@ function parcelList(data) {
 }
 function featureShow(data) {
   for (var i = 0; i < data.length; i++) {
-    const a = data[i].parcelCoordinates;
-    const f = frmt.readFeature(a, {
+    const incomingWkt = data[i].parcelCoordinates;
+    const feature = frmt.readFeature(incomingWkt, {
       dataProjection: "EPSG:3857",
       featureProjection: "EPSG:3857",
     });
-    f.set("parselId", data[i].parcelId);
-    source.addFeature(f);
+    feature.set("parselId", data[i].parcelId);
+    source.addFeature(feature);
   }
   debugger;
 }
@@ -250,9 +250,9 @@ window.onclick = function (event) {
     modal.style.display = "none";
   } else if (event.target == addModal) {
     addModal.style.display = "none";
-    var a = source.getFeatures();
-    var b = a[a.length - 1];
-    source.removeFeature(b);
+    var featureListToRemove = source.getFeatures();
+    var ftrToRemove = featureListToRemove[featureListToRemove.length - 1];
+    source.removeFeature(ftrToRemove);
   }
 };
 
@@ -265,23 +265,12 @@ function add() {
 }
 addSpan.onclick = function () {
   addModal.style.display = "none";
-  var a = source.getFeatures();
-  var b = a[a.length - 1];
-  source.removeFeature(b);
+  var featureListToRemove = source.getFeatures();
+  var ftrToRemove = featureListToRemove[featureListToRemove.length - 1];
+  source.removeFeature(ftrToRemove);
 };
 addBtn.onclick = function (event) {
   event.preventDefault();
   addParcel();
   addModal.style.display = "none";
 };
-
-// incomingWkt =
-//   "POLYGON((-12245082.753737235 5672182.195756167,-12195169.374267016 4660270.596802861,-11187843.99701082 4746032.942538829,-11102081.651274852 5508186.551570321,-11919308.139185814 5638970.306966258,-12245082.753737235 5672182.195756167))";
-// console.log(incomingWkt);
-// const featureWKT = frmt.readFeature(incomingWkt, {
-//   dataProjection: "EPSG:4326",
-//   featureProjection: "EPSG:3857",
-// });
-// source.addFeature(featureWKT);
-// debugger;
-// debugger;
