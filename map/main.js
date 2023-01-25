@@ -4,6 +4,7 @@ import Feature from "ol/Feature.js";
 import { Draw, Modify, Snap } from "ol/interaction.js";
 import { OSM, Vector as VectorSource } from "ol/source.js";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
+import { Circle, Fill, Stroke, Style } from "ol/style.js";
 import { get } from "ol/proj.js";
 import format from "ol/format/WKT";
 
@@ -19,28 +20,37 @@ const raster = new TileLayer({
 const source = new VectorSource();
 const vector = new VectorLayer({
   source: source,
-  style: {
-    "fill-color": "rgba(255, 255, 255, 0.2)",
-    "stroke-color": "#ffcc33",
-    "stroke-width": 2,
-    "circle-radius": 7,
-    "circle-fill-color": "#ffcc33",
-  },
-  feature: new Feature({}),
+  style: new Style({
+    fill: new Fill({
+      //polygon icin
+      color: "rgba(255, 255, 255, 0.5)",
+    }),
+    stroke: new Stroke({
+      //dis cizgiler icin
+      color: "red",
+      width: 2,
+    }),
+    image: new Circle({
+      radius: 7,
+      fill: new Fill({
+        //point icin
+        color: "#ffcc33",
+      }),
+    }),
+  }),
 });
 
 // Limit multi-world panning to one world east and west of the real world.
 // Geometry coordinates have to be within that range.
-const extent = get("EPSG:3857").getExtent().slice();
-extent[0] += extent[0];
-extent[2] += extent[2];
+// const extent = get("EPSG:3857").getExtent().slice();
+// extent[0] += extent[0];
+// extent[2] += extent[2];
 const map = new Map({
   layers: [raster, vector],
   target: "map",
   view: new View({
     center: [-11000000, 4600000],
     zoom: 4,
-    extent,
   }),
 });
 
@@ -95,9 +105,19 @@ function deleteParcel(id) {
     type: "post",
     url: "https://localhost:7126/api/parcel/delete?id=" + id,
     success: function () {
+      removeFeatureMap(id);
       getAll();
     },
   });
+}
+
+function removeFeatureMap(id) {
+  var features = source.getFeatures();
+  for (var i = 0; i < features.length; i++) {
+    if (features[i].values_.parselId == id) {
+      source.removeFeature(features[i]);
+    }
+  }
 }
 
 function updateParcel(id) {
@@ -186,17 +206,22 @@ function parcelList(data) {
       html += "</tr>";
     }
   }
-  const a = data[0].parcelCoordinates;
-  const f = frmt.readFeature(a, {
-    dataProjection: "EPSG:4326",
-    featureProjection: "EPSG:3857",
-  });
-  source.addFeature(f);
-  map.addInteraction(snap);
   $("tbody").empty();
   $("tbody").html(html);
+  featureShow(data);
 }
-
+function featureShow(data) {
+  for (var i = 0; i < data.length; i++) {
+    const a = data[i].parcelCoordinates;
+    const f = frmt.readFeature(a, {
+      dataProjection: "EPSG:3857",
+      featureProjection: "EPSG:3857",
+    });
+    f.set("parselId", data[i].parcelId);
+    source.addFeature(f);
+  }
+  debugger;
+}
 //buttons
 $(document).on("click", "#deleteParcel", function (event) {
   deleteParcel($(this).val());
@@ -206,7 +231,6 @@ $(document).on("click", "#editParcel", function () {
   modal.style.display = "block";
   listParcelById($(this).val());
 });
-
 //update modal
 var modal = document.getElementById("updateModal");
 var span = document.getElementsByClassName("close")[0];
@@ -226,6 +250,9 @@ window.onclick = function (event) {
     modal.style.display = "none";
   } else if (event.target == addModal) {
     addModal.style.display = "none";
+    var a = source.getFeatures();
+    var b = a[a.length - 1];
+    source.removeFeature(b);
   }
 };
 
@@ -238,6 +265,9 @@ function add() {
 }
 addSpan.onclick = function () {
   addModal.style.display = "none";
+  var a = source.getFeatures();
+  var b = a[a.length - 1];
+  source.removeFeature(b);
 };
 addBtn.onclick = function (event) {
   event.preventDefault();
@@ -248,7 +278,10 @@ addBtn.onclick = function (event) {
 // incomingWkt =
 //   "POLYGON((-12245082.753737235 5672182.195756167,-12195169.374267016 4660270.596802861,-11187843.99701082 4746032.942538829,-11102081.651274852 5508186.551570321,-11919308.139185814 5638970.306966258,-12245082.753737235 5672182.195756167))";
 // console.log(incomingWkt);
-// featureWKT = frmt.readFeature(incomingWkt, {
+// const featureWKT = frmt.readFeature(incomingWkt, {
 //   dataProjection: "EPSG:4326",
 //   featureProjection: "EPSG:3857",
 // });
+// source.addFeature(featureWKT);
+// debugger;
+// debugger;
